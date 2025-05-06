@@ -1,0 +1,31 @@
+{
+  "name": "Volandoo",
+  "description": "AI Agent for Volandoo things",
+  "version": "0.0.1",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "agentuity build",
+    "prestart": "agentuity bundle",
+    "start": "bun run .agentuity/index.js"
+  },
+  "keywords": [
+    "agentuity",
+    "agent",
+    "ai",
+    "ai agent",
+    "bun"
+  ],
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "^1.2.12"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@agentuity/sdk": "^0.0.112",
+    "openai": "^4.97.0"
+  },
+  "module": "index.ts"
+}
