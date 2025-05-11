@@ -32,7 +32,7 @@ export default async function Agent(
 	const to = dayjs().endOf("day").valueOf();
 
 	const bestTracks = await fetch(
-		`https://api.volandoo.com/v1/tracks/best?from=${from}&to=${to}&limit=${6}`,
+		`https://api.volandoo.com/v1/tracks/best?from=${from}&to=${to}&limit=${12}`,
 		{
 			headers: {
 				"x-secret-key": process.env.SERVER_KEY ?? "",
