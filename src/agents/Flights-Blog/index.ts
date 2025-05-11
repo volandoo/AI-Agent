@@ -1,4 +1,9 @@
-import type { AgentRequest, AgentResponse, AgentContext, Json } from "@agentuity/sdk";
+import type {
+	AgentRequest,
+	AgentResponse,
+	AgentContext,
+	Json,
+} from "@agentuity/sdk";
 import dayjs from "dayjs";
 import OpenAI from "openai";
 import { type BestTracksResponseType, type NormalizedTrackType } from "./types";
@@ -13,7 +18,10 @@ const normalizeDuration = (ms: number) => {
 };
 
 const capitalizeFirstLetterOfEachWord = (str: string) => {
-	return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+	return str
+		.split(" ")
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
 };
 export default async function Agent(
 	req: AgentRequest,
@@ -46,32 +54,41 @@ export default async function Agent(
 				track_link: `https://volandoo.com/tracks/${t.id}`,
 				profile_link: `https://volandoo.com/pilots/${t.pilot.id}`,
 				site: capitalizeFirstLetterOfEachWord(firstFlight.site.name),
-				type: t.wpts > 0 ? 'competition' : t.mode === "h&f" ? "Hike & Fly" : capitalizeFirstLetterOfEachWord(firstFlight.type ?? "Unknown"),
+				type:
+					t.wpts > 0
+						? "competition"
+						: t.mode === "h&f"
+						? "Hike & Fly"
+						: capitalizeFirstLetterOfEachWord(firstFlight.type ?? "Unknown"),
 				distance: [
 					...t.flights.map((f) => f.distance),
 					...t.hikes.map((h) => h.distance),
 				].reduce((a, b) => a + b, 0),
 				duration: normalizeDuration(t.ended - t.started),
 				waypoint_count: t.wpts > 0 ? t.wpts : undefined,
-				made_goal:t.wpts > 0 ? t.atGoal > 0 : undefined,
+				made_goal: t.wpts > 0 ? t.atGoal > 0 : undefined,
 				flight_count: t.flights.length,
 				hike_count: t.hikes.length,
 				glider_name: t.wing,
-				thermal_count: t.thermalCount
+				thermal_count: t.thermalCount,
 			};
 		})
 		.filter(Boolean) as NormalizedTrackType[];
-
-	const prompt = `
+	const system = `
 You are a blogger for Volandoo. Volandoo is a live tracking platform for hang gliding and paragliding. It also has a logbooks for the pilots to keep
 track of their flights. Not only this, but Volandoo is also a social network where pilots can comment and like each other's flights.
-
-Now that you know all of this, write a weekly blog post summarizing the top 6 flights of the week on the Volandoo platform. Start the post with a short,
+`;
+	const prompt = `
+Write a weekly blog post summarizing the top 6 flights of the week on the Volandoo platform. Start the post with a short,
 friendly 3-4 sentence introduction, and then write a 4-5 sentence paragraph for each flight. The most important paramenters to talk about are distance, duration,
 name of the pilot, name of the glider, and the site. But please use all the paramenters you consider relevant. Use the image link to show a screenshot of the flight, 
 link to the flight track on the image, and the link to the pilot's profile as  well somewhere in the post. If the flight is a competition, mention if the pilot made goal or not.
 
-This is the week of ${new Date(from).toDateString()}, and eventhough we're only showing the top 6 flights, there are ${bestTracks.data.total} flights in total, mention this.
+This is the week of ${new Date(
+		from
+	).toDateString()}, and eventhough we're only showing the top 6 flights, there are ${
+		bestTracks.data.total
+	} flights in total, mention this.
 
 Tone: Friendly, engaging, and community-centered. Celebrate the achievements, and vary phrasing to keep each paragraph unique.
 Note: If there are several flights from the same pilot, only mention the best one.
@@ -90,10 +107,8 @@ Here are the tracks:
 	console.log(prompt);
 	const completion = await client.chat.completions.create({
 		messages: [
-			{
-				role: "user",
-				content: prompt,
-			},
+			{ role: "system", content: system },
+			{ role: "user", content: prompt },
 		],
 		model: "gpt-4.1-mini",
 	});
@@ -108,9 +123,8 @@ Here are the tracks:
 		message = message.slice(0, -3);
 	}
 
-	console.log(message);
 	const json = JSON.parse(message ?? "{}");
-	
+
 	if (json.title && json.brief && json.content && json.image) {
 		const response = await fetch("https://api.volandoo.com/v1/blog", {
 			method: "POST",
@@ -128,8 +142,7 @@ Here are the tracks:
 		}).then((res) => res.json());
 
 		return resp.json(response as Json);
-	} 
+	}
 
-	console.error(json);
 	return resp.text("Something went wrong");
 }
