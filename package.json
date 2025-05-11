@@ -25,6 +25,8 @@
   },
   "dependencies": {
     "@agentuity/sdk": "^0.0.112",
+    "@sinclair/typebox": "^0.34.33",
+    "dayjs": "^1.11.13",
     "openai": "^4.97.0"
   },
   "module": "index.ts"
