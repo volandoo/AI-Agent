@@ -104,7 +104,7 @@ Here are the tracks:
 	${JSON.stringify(normalizedTracks)}
 	`;
 
-	console.log(prompt);
+
 	const completion = await client.chat.completions.create({
 		messages: [
 			{ role: "system", content: system },
