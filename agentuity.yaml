@@ -73,3 +73,6 @@ agents:
     name: Flights Blog
     # The description of the Agent which is editable
     description: Creates a blog post about the best flights of the week
+  - id: agent_e585bbd974a69d821a8a54dbdfd12fc6
+    name: Track Brief
+    description: A short description of the track
