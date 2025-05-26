@@ -68,7 +68,7 @@ jobs:
             --data-binary @data/payload.json \
             --output summary.txt
           SUMMARY_ENCODED=$(base64 < summary.txt | tr -d '\n')
-          echo "$SUMMARY_ENCODED" >> $GITHUB_OUTPUT
+          echo "summary_encoded=$SUMMARY_ENCODED" >> $GITHUB_OUTPUT
 
     outputs:
       summary_encoded: ${{ steps.summarize.outputs.summary_encoded }}
