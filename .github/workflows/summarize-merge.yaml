@@ -85,7 +85,7 @@ jobs:
         with:
           bun-version: latest
       - name: Deploy Agentuity Project
-        uses: ./action.yml
+        uses: ./
         with:
           api_key: ${{ secrets.AGENTUITY_SDK_KEY }}
           description: ${{ needs.send-summary.outputs.summary_encoded }}
