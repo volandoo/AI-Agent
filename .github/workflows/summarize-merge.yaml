@@ -58,9 +58,34 @@ jobs:
           echo ']' >> data/payload.json
 
       - name: Send to AI summarizer agent
+        id: summarize
         env:
-          AGENT_URL: ${{ secrets.AGENTUITY_URL }}  # Set your endpoint as a secret
+          AGENT_URL: ${{ secrets.AGENTUITY_URL }}
         run: |
           curl -X POST "$AGENT_URL" \
             -H "Content-Type: application/json" \
-            --data-binary @data/payload.json
+            -H "Authorization: Bearer ${{ secrets.AGENTUITY_URL_KEY }}" \
+            --data-binary @data/payload.json \
+            --output summary.txt
+          SUMMARY_ENCODED=$(base64 < summary.txt | tr -d '\n')
+          echo "$SUMMARY_ENCODED" >> $GITHUB_OUTPUT
+
+    outputs:
+      summary_encoded: ${{ steps.summarize.outputs.summary_encoded }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: send-summary
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Deploy Agentuity Project
+        uses: ./action.yml
+        with:
+          api_key: ${{ secrets.AGENTUITY_SDK_KEY }}
+          description: ${{ needs.send-summary.outputs.summary_encoded }}
