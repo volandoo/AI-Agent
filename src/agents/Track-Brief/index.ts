@@ -9,13 +9,14 @@ const TrackObject = Type.Object({
 	site: Type.String(),
 	type: Type.String(),
 	distance: Type.Number(),
-	duration_seconds: Type.Number(),
-	waypoint_count: Type.Number(),
-	made_goal: Type.Boolean(),
-	km_to_goal: Type.Number(),
+	duration: Type.String(),
+	waypoint_count: Type.Optional(Type.Number()),
+	made_goal: Type.Optional(Type.Boolean()),
+	km_to_goal: Type.Optional(Type.Number()),
 	thermal_count: Type.Number(),
 	glide_count: Type.Number(),
 	total_tracks_this_year: Type.Number(),
+	is_comp: Type.Boolean(),
 	date: Type.String(),
 });
 
@@ -33,15 +34,21 @@ export default async function Agent(
 	const track = await req.data.object<TrackObjectType>();
 
 	const system = `
-	Volandoo is a location-based live tracking platform for hang gliding and paragliding. It also has a logbooks for the 
-	pilots to keep a history of their tracks, these can be either "flight" or "hike & fly" tracks.
+	Volandoo is a location-based live tracking platform for hang gliding and paragliding. It also has a logbook for the 
+	pilots to keep a history of their actvities. These activities are called "tracks", and these can be either "flight" or "hike & fly" tracks.
 
-	You are given a track from a pilot, this pilot just finished their activity. Your job is to write a brief summary of
-	the track. You are also given a number of tracks they have recorded with Volandoo so far this year. You should use this
-	information to write a brief summary of the track. This should not be more than 6 sentences. Only output markown.
+	This pilot just finished their activity and you're given the track. Your job is to write a brief summary of this activity. In the payload you
+	will find the number of tracks they have recorded with Volandoo so far this year. You should use this information if you can.
 	`;
 
-	const prompt = `Here is the track in json format: ${JSON.stringify(track)}`;
+	const prompt = `Here is the track in json format: 
+	\`\`\`json
+	${JSON.stringify(track)}
+	\`\`\`
+
+	Return the summary in markdown format, don't make it more than 6 sentences long. If the "site" is unknown, don't mention it.
+	If "is_comp" is true, this is part of a competition, otherwise it free flight, don't mention anything related to comps if it's not a comp.
+	`;
 
 	const completion = await client.chat.completions.create({
 		messages: [
@@ -50,22 +57,17 @@ export default async function Agent(
 		],
 		model: "gpt-4.1-mini",
 	});
+
 	let message = completion.choices[0]?.message?.content;
-
-
 	if (message) {
-		await fetch(`https://api.volandoo.com/v1/tracks/${track.id}/brief`, {
-			method: "POST",
-			body: JSON.stringify({
-				brief: message,
-			}),
-			headers: {
-				"x-secret-key": process.env.SERVER_KEY ?? "",
-				"Content-Type": "application/json",
-			},
+		return resp.json({
+			success: true,
+			message,
 		});
-		return resp.text(message);
 	}
 
-	return resp.text('Something went wrong');
+	return resp.json({
+		success: false,
+		message: 'Something went wrong',
+	});
 }
