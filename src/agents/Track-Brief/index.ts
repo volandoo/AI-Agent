@@ -58,7 +58,8 @@ export default async function Agent(
 		model: "gpt-4.1-mini",
 	});
 
-	let message = completion.choices[0]?.message?.content;
+	let message = completion.choices[0]?.message?.content?.replace(/```markdown\n/g, '').replace(/\n```/g, '');
+
 	if (message) {
 		return resp.json({
 			success: true,
