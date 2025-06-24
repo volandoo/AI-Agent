@@ -58,17 +58,31 @@ export default async function Agent(
 		model: "gpt-4.1-mini",
 	});
 
-	let message = completion.choices[0]?.message?.content?.replace(/```markdown\n/g, '').replace(/\n```/g, '');
+	const message = completion.choices[0]?.message?.content?.replace(/```markdown\n/g, '').replace(/\n```/g, '');
 
-	if (message) {
+	try {
+		const response = await fetch(`https://api.volandoo.com/v1/tracks/${track.id}/ai`, {
+			method: "POST",
+			body: JSON.stringify({
+				comment: message,
+			}),
+			headers: {
+				"x-secret-key": process.env.SERVER_KEY ?? "",
+				"Content-Type": "application/json",
+			},
+		}).then(res => res.json()).then(data => {
+			return data as {
+				success: boolean;
+				message: string;
+			}
+		});
+
+		return resp.json(response);
+	} catch (error) {
 		return resp.json({
-			success: true,
-			message,
+			success: false,
+			message: error,
 		});
 	}
 
-	return resp.json({
-		success: false,
-		message: 'Something went wrong',
-	});
 }
