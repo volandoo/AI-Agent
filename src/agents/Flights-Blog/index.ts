@@ -85,9 +85,9 @@ export default async function Agent(
 		headers: {
 			"x-secret-key": process.env.SERVER_KEY ?? "",
 		},
-	}).then(res => res.json() as Promise<{ memories: { memory_text: string }[] }>);
+	}).then(res => res.json() as Promise<{ data: { memory_text: string }[] }>);
 
-	const memoryContext = memories.memories.map(m => `- ${m.memory_text}`).join("\n");
+	const memoryContext = memories.data.map(m => `- ${m.memory_text}`).join("\n");
 
 
 
