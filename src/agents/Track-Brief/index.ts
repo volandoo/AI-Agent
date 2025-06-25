@@ -31,7 +31,7 @@ export default async function Agent(
 	ctx: AgentContext,
 ) {
 
-	const track = await req.data.object<TrackObjectType>();
+	const { track, previous } = await req.data.object<{ track: TrackObjectType, previous: string[] }>();
 
 	const system = `
 	Volandoo is a location-based live tracking platform for hang gliding and paragliding. It also has a logbook for the 
@@ -39,12 +39,19 @@ export default async function Agent(
 
 	This pilot just finished their activity and you're given the track. Your job is to write a brief summary of this activity. In the payload you
 	will find the number of tracks they have recorded with Volandoo so far this year. You should use this information if you can.
+
+	${previous.length > 0 ? "There's also a list of previous summaries, try not to repeat yourself." : ""}
 	`;
 
 	const prompt = `Here is the track in json format: 
 	\`\`\`json
 	${JSON.stringify(track)}
 	\`\`\`
+
+	${previous.length > 0 ? "Here is a list of previous summaries:" : ""}
+	${previous.length > 0 ? "\`\`\`" : ""}
+	${previous.length > 0 ? previous.join("\n") : ""}
+	${previous.length > 0 ? "\`\`\`" : ""}
 
 	Return the summary in plain text format, no line breaks, and don't make it more than 4 sentences long. If the "site" is unknown, don't mention it.
 	If "is_comp" is true, this is part of a competition, otherwise it free flight, don't mention anything related to comps if it's not a comp.
