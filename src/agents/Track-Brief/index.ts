@@ -33,6 +33,8 @@ export default async function Agent(
 
 	const { track, previous } = await req.data.object<{ track: TrackObjectType, previous: string[] }>();
 
+	ctx.logger.info({ track, previous });
+
 	const system = `
 	Volandoo is a location-based live tracking platform for hang gliding and paragliding. It also has a logbook for the 
 	pilots to keep a history of their actvities. These activities are called "tracks", and these can be either "flight" or "hike & fly" tracks.
