@@ -46,7 +46,7 @@ export default async function Agent(
 	${JSON.stringify(track)}
 	\`\`\`
 
-	Return the summary in markdown format, don't make it more than 6 sentences long. If the "site" is unknown, don't mention it.
+	Return the summary in plain text format, no line breaks, and don't make it more than 4 sentences long. If the "site" is unknown, don't mention it.
 	If "is_comp" is true, this is part of a competition, otherwise it free flight, don't mention anything related to comps if it's not a comp.
 	`;
 
@@ -58,7 +58,7 @@ export default async function Agent(
 		model: "gpt-4.1-mini",
 	});
 
-	const message = completion.choices[0]?.message?.content?.replace(/```markdown\n/g, '').replace(/\n```/g, '');
+	const message = completion.choices[0]?.message?.content?.replace(/```\n/g, '').replace(/\n```/g, '');
 
 	try {
 		const response = await fetch(`https://api.volandoo.com/v1/tracks/${track.id}/ai`, {
