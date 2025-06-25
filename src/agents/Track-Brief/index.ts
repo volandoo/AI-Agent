@@ -40,7 +40,8 @@ export default async function Agent(
 	pilots to keep a history of their actvities. These activities are called "tracks", and these can be either "flight" or "hike & fly" tracks.
 
 	This pilot just finished their activity and you're given the track. Your job is to write a brief summary of this activity. In the payload you
-	will find the number of tracks they have recorded with Volandoo so far this year. You should use this information if you can.
+	will find the number of tracks they have recorded with Volandoo so far this year. You should use this information if you can. If the track is a hike & fly,
+	you should mention that. If the flight is over 100km, it's a great flight, if it's over 200km is an amazing flight.
 
 	${previous.length > 0 ? "There's also a list of previous summaries, try not to repeat yourself." : ""}
 	`;
