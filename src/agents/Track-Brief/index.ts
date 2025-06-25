@@ -60,6 +60,8 @@ export default async function Agent(
 
 	const message = completion.choices[0]?.message?.content?.replace(/```\n/g, '').replace(/\n```/g, '');
 
+	ctx.logger.info({ id: track.id, message });
+
 	try {
 		const response = await fetch(`https://api.volandoo.com/v1/tracks/${track.id}/ai`, {
 			method: "POST",
