@@ -6,77 +6,9 @@ on:
       - main
 
 jobs:
-  send-summary:
-    runs-on: ubuntu-latest
-    environment: prod
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Required to access full history
-
-      - name: Get changed files
-        id: changed
-        run: |
-          echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }} >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Prepare JSON payload
-        id: prepare
-        run: |
-          mkdir data
-
-          echo '[' > data/payload.json
-
-          for file in $(git diff --name-only ${{ github.event.before }} ${{ github.sha }}); do
-            # Clean file name for JSON
-            escaped_file=$(echo "$file" | sed 's/"/\\"/g')
-
-            # Get diff
-            diff=$(git diff ${{ github.event.before }} ${{ github.sha }} -- "$file" || echo "")
-            # Get before content
-            before=$(git show ${{ github.event.before }}:"$file" 2>/dev/null || echo "")
-            # Get after content
-            after=$(git show ${{ github.sha }}:"$file" 2>/dev/null || echo "")
-
-            # Escape strings for JSON (newline to \n, quote to \")
-            esc_diff=$(echo "$diff" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
-            esc_before=$(echo "$before" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
-            esc_after=$(echo "$after" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
-
-            echo "  {" >> data/payload.json
-            echo "    \"file\": \"$escaped_file\"," >> data/payload.json
-            echo "    \"diff\": $esc_diff," >> data/payload.json
-            echo "    \"before\": $esc_before," >> data/payload.json
-            echo "    \"after\": $esc_after" >> data/payload.json
-            echo "  }," >> data/payload.json
-          done
-
-          # Remove the last comma and close the JSON array
-          sed -i '$ s/},/}/' data/payload.json
-          echo ']' >> data/payload.json
-
-      - name: Send to AI summarizer agent
-        id: summarize
-        env:
-          AGENT_URL: ${{ secrets.AGENTUITY_URL }}
-        run: |
-          curl -X POST "$AGENT_URL" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.AGENTUITY_URL_KEY }}" \
-            --data-binary @data/payload.json \
-            --output summary.txt
-          SUMMARY_ENCODED=$(base64 < summary.txt | tr -d '\n')
-          echo "summary_encoded=$SUMMARY_ENCODED" >> $GITHUB_OUTPUT
-
-    outputs:
-      summary_encoded: ${{ steps.summarize.outputs.summary_encoded }}
-
   deploy:
     runs-on: ubuntu-latest
     environment: prod
-    needs: send-summary
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -88,4 +20,3 @@ jobs:
         uses: ./
         with:
           api_key: ${{ secrets.AGENTUITY_SDK_KEY }}
-          description: ${{ needs.send-summary.outputs.summary_encoded }}
